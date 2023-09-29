@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import Summary from "./Summary";
+// import { spawn } from "child_process";
 
 const Body = () => {
   const [input, setInput] = useState("");
@@ -21,14 +22,27 @@ const Body = () => {
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit =async (e) => {
     e.preventDefault();
 
     if (validateInput()) {
       setLoading(true);
       loadingSpinnerRef.current.classList.remove("hidden");
       // Perform the rest of your logic here
+      //call the python model and run
+      try {
+        // const spawn = require("child_process").spawn;
+        const spawn = await import('child_process');
 
+        const pythonProcess = spawn('python',["../youtubeSum.py"]);
+        pythonProcess.stdout.on('data', (data) => {
+          console.log(data.toString());
+        });
+
+      } catch (error) {
+        console.log(error)
+        setErrorMessage(error.message);
+      }
     }
    
   };
