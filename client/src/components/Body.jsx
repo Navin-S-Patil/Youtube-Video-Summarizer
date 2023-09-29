@@ -1,13 +1,17 @@
 import { useState, useRef } from "react";
 import Summary from "./Summary";
-// import { spawn } from "child_process";
+import axios from "axios";
 
 const Body = () => {
   const [input, setInput] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [summary, setSummary] = useState(false);
+  const [summarizedText, setSummarizedText] = useState([]);
 
   const loadingSpinnerRef = useRef(loading);
+
+  
 
   const validateInput = () => {
     const regex =
@@ -22,7 +26,7 @@ const Body = () => {
     return true;
   };
 
-  const handleSubmit =async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (validateInput()) {
@@ -31,20 +35,26 @@ const Body = () => {
       // Perform the rest of your logic here
       //call the python model and run
       try {
-        // const spawn = require("child_process").spawn;
-        const spawn = await import('child_process');
-
-        const pythonProcess = spawn('python',["../youtubeSum.py"]);
-        pythonProcess.stdout.on('data', (data) => {
-          console.log(data.toString());
+        const response = axios.post("http://localhost:4000/", {
+          link: input,
         });
 
+        loadingSpinnerRef.current.classList.remove("hidden");
+        const data = (await response).data;
+        setSummarizedText(data.result.split("&&&"));
+        // summarizedText = data.result.split("&&&");
+        console.log(data);
+        console.log(summarizedText);
+
+        setSummary(true);
+
+        setLoading(false);
+        loadingSpinnerRef.current.classList.add("hidden");
       } catch (error) {
-        console.log(error)
+        console.log(error);
         setErrorMessage(error.message);
       }
     }
-   
   };
 
   return (
@@ -131,7 +141,7 @@ const Body = () => {
       </div>
 
       {/* summary boxes */}
-      <Summary />
+      {summary ? <Summary text={summarizedText} link={input} /> : null}
     </>
   );
 };
